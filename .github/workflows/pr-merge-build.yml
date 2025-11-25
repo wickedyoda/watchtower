@@ -35,6 +35,7 @@ jobs:
         with:
           context: ./dockerfiles
           file: ./Dockerfile
+          context: .
           push: true
           tags: |
             ${{ env.IMAGE_NAME }}:latest

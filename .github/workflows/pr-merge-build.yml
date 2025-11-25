@@ -36,7 +36,7 @@ jobs:
           go-version-file: go.mod
 
       - name: Build watchtower binary
-        run: GOOS=linux GOARCH=amd64 go build -o dockerfiles/watchtower .
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dockerfiles/watchtower .
 
       - name: Build and push image
         id: build-image

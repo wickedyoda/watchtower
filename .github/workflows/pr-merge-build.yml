@@ -40,6 +40,7 @@ jobs:
 
       - name: Build and push image
         id: build-image
+
         uses: docker/build-push-action@v5
         with:
           context: ./dockerfiles
@@ -55,3 +56,4 @@ jobs:
         env:
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
           DIGEST: ${{ steps.build-image.outputs.digest }}
+

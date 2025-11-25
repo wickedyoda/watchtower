@@ -30,6 +30,14 @@ jobs:
       - name: Set image name
         run: echo "IMAGE_NAME=ghcr.io/${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build watchtower binary
+        run: GOOS=linux GOARCH=amd64 go build -o dockerfiles/watchtower .
+        
       - name: Build and push image
         uses: docker/build-push-action@v5
         with:

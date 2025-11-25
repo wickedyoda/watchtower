@@ -37,13 +37,23 @@ jobs:
 
       - name: Build watchtower binary
         run: GOOS=linux GOARCH=amd64 go build -o dockerfiles/watchtower .
-        
+
       - name: Build and push image
+        id: build-image
+
         uses: docker/build-push-action@v5
         with:
           context: ./dockerfiles
           file: ./Dockerfile
           push: true
-          tags: |
-            ${{ env.IMAGE_NAME }}:latest
-            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Tag build as latest
+        run: |
+          docker buildx imagetools create \
+            --tag "${IMAGE_NAME}:latest" \
+            "${IMAGE_NAME}@${DIGEST}"
+        env:
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          DIGEST: ${{ steps.build-image.outputs.digest }}
+

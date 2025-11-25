@@ -36,13 +36,13 @@ jobs:
           go-version-file: go.mod
 
       - name: Build watchtower binary
-        run: GOOS=linux GOARCH=amd64 go build -o watchtower .
+        run: GOOS=linux GOARCH=amd64 go build -o dockerfiles/watchtower .
 
       - name: Build and push image
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: ./dockerfiles/Dockerfile
+          context: ./dockerfiles
+          file: ./Dockerfile
           push: true
           tags: |
             ${{ env.IMAGE_NAME }}:latest

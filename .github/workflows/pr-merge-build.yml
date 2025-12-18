@@ -34,30 +34,13 @@ jobs:
         run: echo "IMAGE_NAME=ghcr.io/${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
       - name: Build and push image
-        id: build-image
+        id: build_and_push
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./dockerfiles/Dockerfile
           push: true
           platforms: linux/amd64,linux/arm/v7,linux/arm64
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-
-      - name: Build watchtower binary
-        run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dockerfiles/watchtower .
-
-      - name: Build and push image
-        id: build-image
-
-        uses: docker/build-push-action@v5
-        with:
-          context: ./dockerfiles
-          file: ./Dockerfile
-          push: true
-
           tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
 
       - name: Tag build as latest
@@ -67,5 +50,4 @@ jobs:
             "${IMAGE_NAME}@${DIGEST}"
         env:
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
-          DIGEST: ${{ steps.build-image.outputs.digest }}
-
+          DIGEST: ${{ steps.build_and_push.outputs.digest }}

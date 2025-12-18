@@ -18,7 +18,6 @@ RUN CGO_ENABLED=0 \
     GOARCH=$TARGETARCH \
     GOARM="$( [ "$TARGETARCH" = "arm" ] && echo "${TARGETVARIANT#v}" )" \
     go build -o /out/watchtower .
-RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /out/watchtower .
 
 FROM --platform=$BUILDPLATFORM alpine:3.19.0 as alpine
 

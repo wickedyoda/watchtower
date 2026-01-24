@@ -47,21 +47,6 @@ To build a single-arch image locally without pushing, set `PUSH=false` and a sin
 $ PUSH=false PLATFORMS=linux/amd64 IMAGE_NAME=watchtower IMAGE_TAG=local scripts/build-multi-arch.sh
 ```
 
-## Scheduling updates with a cron expression
-
-To control how often Watchtower checks for updates, set a cron-style schedule using the existing `WATCHTOWER_SCHEDULE`
-environment variable or the `WATCHTOWER_CRON_SCHEDULE` alias. The schedule uses a 6-field cron expression format.
-
-Example (run daily at 4:00 AM):
-
-```
-$ docker run --detach \
-    --name watchtower \
-    --env WATCHTOWER_CRON_SCHEDULE="0 0 4 * * *" \
-    --volume /var/run/docker.sock:/var/run/docker.sock \
-    ghcr.io/wickedyoda/watchtower:latest
-```
-
 ## Contributors
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):

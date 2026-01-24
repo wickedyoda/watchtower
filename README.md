@@ -25,6 +25,24 @@ Watchtower is intended to be used in homelabs, media centers, local dev environm
 ## Documentation
 The full documentation is available at https://github.com/wickedyoda/watchtower.
 
+## Multi-arch Docker image (AMD64 + ARM64)
+
+To build and publish a multi-arch image locally, use Docker Buildx with a builder that supports `linux/amd64` and `linux/arm64`:
+
+```
+$ docker run --privileged --rm tonistiigi/binfmt --install all
+$ docker buildx create --name watchtower-multi --use
+$ docker buildx inspect --bootstrap
+
+$ docker buildx build \
+    --platform linux/amd64,linux/arm64 \
+    --tag ghcr.io/your-org/watchtower:latest \
+    --push \
+    .
+```
+
+If you want to build a single-arch image for local testing, use `--load` instead of `--push` and pass a single platform, e.g. `--platform linux/amd64`.
+
 ## Contributors
 
 Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):

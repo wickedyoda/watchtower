@@ -262,6 +262,24 @@ func TestProcessFlagAliasesScheduleFromEnvironment(t *testing.T) {
 	assert.Equal(t, `@hourly`, sched)
 }
 
+func TestProcessFlagAliasesScheduleFromCronEnvironment(t *testing.T) {
+	cmd := new(cobra.Command)
+
+	t.Setenv("WATCHTOWER_CRON_SCHEDULE", `@daily`)
+
+	SetDefaults()
+	RegisterDockerFlags(cmd)
+	RegisterSystemFlags(cmd)
+	RegisterNotificationFlags(cmd)
+
+	require.NoError(t, cmd.ParseFlags([]string{}))
+	flags := cmd.Flags()
+	ProcessFlagAliases(flags)
+
+	sched, _ := flags.GetString(`schedule`)
+	assert.Equal(t, `@daily`, sched)
+}
+
 func TestProcessFlagAliasesInvalidPorcelaineVersion(t *testing.T) {
 	logrus.StandardLogger().ExitFunc = func(_ int) { panic(`FATAL`) }
 	cmd := new(cobra.Command)

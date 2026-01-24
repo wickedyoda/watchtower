@@ -27,21 +27,25 @@ The full documentation is available at https://github.com/wickedyoda/watchtower.
 
 ## Multi-arch Docker image (AMD64 + ARM64)
 
-To build and publish a multi-arch image locally, use Docker Buildx with a builder that supports `linux/amd64` and `linux/arm64`:
+Use Docker Buildx to build and publish a multi-arch image for `linux/amd64` and `linux/arm64`.
+
+If you have not enabled binfmt on the host yet, run:
 
 ```
 $ docker run --privileged --rm tonistiigi/binfmt --install all
-$ docker buildx create --name watchtower-multi --use
-$ docker buildx inspect --bootstrap
-
-$ docker buildx build \
-    --platform linux/amd64,linux/arm64 \
-    --tag ghcr.io/your-org/watchtower:latest \
-    --push \
-    .
 ```
 
-If you want to build a single-arch image for local testing, use `--load` instead of `--push` and pass a single platform, e.g. `--platform linux/amd64`.
+Then build and push with the helper script:
+
+```
+$ IMAGE_NAME=ghcr.io/your-org/watchtower IMAGE_TAG=latest scripts/build-multi-arch.sh
+```
+
+To build a single-arch image locally without pushing, set `PUSH=false` and a single platform:
+
+```
+$ PUSH=false PLATFORMS=linux/amd64 IMAGE_NAME=watchtower IMAGE_TAG=local scripts/build-multi-arch.sh
+```
 
 ## Contributors
 

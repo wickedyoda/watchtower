@@ -387,7 +387,7 @@ can be defined, but not both. An example: `--schedule "0 0 4 * * *"`
 
 ```text
             Argument: --schedule, -s
-Environment Variable: WATCHTOWER_SCHEDULE
+Environment Variable: WATCHTOWER_SCHEDULE (or WATCHTOWER_CRON_SCHEDULE)
                 Type: String
              Default: -
 ```

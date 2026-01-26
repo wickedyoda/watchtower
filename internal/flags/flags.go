@@ -41,7 +41,7 @@ func RegisterSystemFlags(rootCmd *cobra.Command) {
 	flags.StringP(
 		"schedule",
 		"s",
-		envString("WATCHTOWER_SCHEDULE"),
+		envStringWithAliases("WATCHTOWER_SCHEDULE", "WATCHTOWER_CRON_SCHEDULE"),
 		"The cron expression which defines when to update")
 
 	flags.DurationP(
@@ -394,6 +394,25 @@ Should only be used for testing.`)
 func envString(key string) string {
 	viper.MustBindEnv(key)
 	return viper.GetString(key)
+}
+
+func envStringWithAliases(key string, aliases ...string) string {
+	viper.MustBindEnv(key)
+	for _, alias := range aliases {
+		viper.MustBindEnv(alias)
+	}
+
+	if value := viper.GetString(key); value != "" {
+		return value
+	}
+
+	for _, alias := range aliases {
+		if value := viper.GetString(alias); value != "" {
+			return value
+		}
+	}
+
+	return ""
 }
 
 func envStringSlice(key string) []string {

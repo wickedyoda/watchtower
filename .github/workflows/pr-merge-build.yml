@@ -39,6 +39,8 @@ jobs:
           context: .
           file: ./dockerfiles/Dockerfile.dev-self-contained
           platforms: linux/amd64,linux/arm64
+          build-args: |
+            WATCHTOWER_BUILD_VERSION=${{ github.sha }}
           push: true
           tags: |
             ${{ env.IMAGE_NAME }}:latest

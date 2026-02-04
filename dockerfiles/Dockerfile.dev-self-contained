@@ -2,11 +2,13 @@
 # Builder
 #
 
-FROM golang:alpine as builder
+FROM --platform=$BUILDPLATFORM golang:alpine as builder
 
 # use version (for example "v0.3.3") or "main"
 ARG WATCHTOWER_VERSION=main
 ARG WATCHTOWER_BUILD_VERSION=dev
+ARG TARGETOS
+ARG TARGETARCH
 
 # Pre download required modules to avoid redownloading at each build thanks to docker layer caching.
 # Copying go.mod and go.sum ensure to invalid the layer/build cache if there is a change in module requirement
@@ -25,8 +27,7 @@ COPY . /watchtower
 
 RUN \
   cd /watchtower && \
-  VERSION="$(git describe --tags --always --dirty 2>/dev/null || echo "$WATCHTOWER_BUILD_VERSION")" && \
-  GO111MODULE=on CGO_ENABLED=0 GOOS=linux go build -a -ldflags "-extldflags '-static' -X github.com/containrrr/watchtower/internal/meta.Version=$VERSION" .
+  GO111MODULE=on CGO_ENABLED=0 GOOS="${TARGETOS:-linux}" GOARCH="$TARGETARCH" go build -v -ldflags "-s -w -X github.com/containrrr/watchtower/internal/meta.Version=$WATCHTOWER_BUILD_VERSION" .
 
 
 #

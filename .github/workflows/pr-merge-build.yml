@@ -102,8 +102,14 @@ jobs:
 
       - name: Create and push manifest list
         run: |
+          set -euo pipefail
+          refs=()
+          for digest_file in *; do
+            refs+=("${IMAGE_NAME}@sha256:${digest_file}")
+          done
+
           docker buildx imagetools create \
             --tag "${IMAGE_NAME}:latest" \
             --tag "${IMAGE_NAME}:${GITHUB_SHA}" \
-            $(printf '%s@sha256:%s ' "${IMAGE_NAME}" *)
+            "${refs[@]}"
         working-directory: /tmp/digests

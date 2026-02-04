@@ -1,7 +1,6 @@
 package digest
 
 import (
-	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"errors"

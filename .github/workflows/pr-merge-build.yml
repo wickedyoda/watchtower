@@ -108,8 +108,10 @@ jobs:
       - name: Create and push tags
         run: |
           set -euo pipefail
-          amd64_digest="$(ls /tmp/digests/amd64)"
-          arm64_digest="$(ls /tmp/digests/arm64)"
+          amd64_digest="$(find /tmp/digests/amd64 -maxdepth 1 -type f -printf '%f\n' | head -n1)"
+          arm64_digest="$(find /tmp/digests/arm64 -maxdepth 1 -type f -printf '%f\n' | head -n1)"
+          [ -n "${amd64_digest}" ]
+          [ -n "${arm64_digest}" ]
 
           docker buildx imagetools create \
             --tag "${IMAGE_NAME}:amd64" \

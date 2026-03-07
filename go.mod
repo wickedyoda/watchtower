@@ -1,6 +1,6 @@
 module github.com/containrrr/watchtower
 
-go 1.24.0
+go 1.26.1
 
 require (
 	github.com/containrrr/shoutrrr v0.8.0
@@ -17,7 +17,6 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/net v0.49.0
 )
 
 require (
@@ -32,6 +31,7 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.40.0 // indirect
 	go.opentelemetry.io/otel/metric v1.40.0 // indirect
 	go.opentelemetry.io/otel/trace v1.40.0 // indirect
+	golang.org/x/net v0.49.0 // indirect
 )
 
 require (

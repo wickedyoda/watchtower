@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/containrrr/watchtower/internal/util"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
@@ -28,6 +29,7 @@ type Client interface {
 	ListContainers(t.Filter) ([]t.Container, error)
 	GetContainer(containerID t.ContainerID) (t.Container, error)
 	StopContainer(t.Container, time.Duration) error
+	RemoveContainer(t.Container) error
 	StartContainer(t.Container) (t.ContainerID, error)
 	RenameContainer(t.Container, string) error
 	IsContainerStale(t.Container, t.UpdateParams) (stale bool, latestImage t.ImageID, err error)
@@ -201,29 +203,18 @@ func (client dockerClient) StopContainer(c t.Container, timeout time.Duration) e
 		}
 	}
 
-	// TODO: This should probably be checked.
-	_ = client.waitForStopOrTimeout(c, timeout)
-
-	if c.ContainerInfo().HostConfig.AutoRemove {
-		log.Debugf("AutoRemove container %s, skipping ContainerRemove call.", shortID)
-	} else {
-		log.Debugf("Removing container %s", shortID)
-
-		if err := client.api.ContainerRemove(bg, idStr, container.RemoveOptions{Force: true, RemoveVolumes: client.RemoveVolumes}); err != nil {
-			if sdkClient.IsErrNotFound(err) {
-				log.Debugf("Container %s not found, skipping removal.", shortID)
-				return nil
-			}
-			return err
+	if err := client.waitForStopOrTimeout(c, timeout); err != nil {
+		if sdkClient.IsErrNotFound(err) {
+			return nil
 		}
-	}
-
-	// Wait for container to be removed. In this case an error is a good thing
-	if err := client.waitForStopOrTimeout(c, timeout); err == nil {
-		return fmt.Errorf("container %s (%s) could not be removed", c.Name(), shortID)
+		return err
 	}
 
 	return nil
+}
+
+func (client dockerClient) RemoveContainer(c t.Container) error {
+	return client.removeContainerByID(c.ID())
 }
 
 func (client dockerClient) GetNetworkConfig(c t.Container) *network.NetworkingConfig {
@@ -267,12 +258,43 @@ func (client dockerClient) StartContainer(c t.Container) (t.ContainerID, error) 
 	}()
 
 	name := c.Name()
+	backupName := util.RandName()
+	renamedOriginal := false
+
+	log.Debugf("Renaming container %s (%s) to %s before replacement", name, c.ID().ShortID(), backupName)
+	if err := client.api.ContainerRename(bg, string(c.ID()), backupName); err != nil {
+		if !sdkClient.IsErrNotFound(err) {
+			return "", err
+		}
+		log.Debugf("Container %s (%s) no longer exists before replacement; continuing without rollback target", name, c.ID().ShortID())
+	} else {
+		renamedOriginal = true
+	}
+
+	rollback := func(createdID string, startErr error) (t.ContainerID, error) {
+		if createdID != "" {
+			if err := client.removeContainerByID(t.ContainerID(createdID)); err != nil {
+				log.WithError(err).Warnf("Failed to remove incomplete replacement for %s", name)
+			}
+		}
+		if renamedOriginal {
+			if err := client.api.ContainerRename(bg, string(c.ID()), name); err != nil {
+				return "", err
+			}
+			if c.IsRunning() {
+				if err := client.api.ContainerStart(bg, string(c.ID()), container.StartOptions{}); err != nil {
+					return "", err
+				}
+			}
+		}
+		return "", startErr
+	}
 
 	log.Infof("Creating %s", name)
 
 	createdContainer, err := client.api.ContainerCreate(bg, config, hostConfig, simpleNetworkConfig, nil, name)
 	if err != nil {
-		return "", err
+		return rollback("", err)
 	}
 
 	if !(hostConfig.NetworkMode.IsHost()) {
@@ -280,14 +302,14 @@ func (client dockerClient) StartContainer(c t.Container) (t.ContainerID, error) 
 		for k := range simpleNetworkConfig.EndpointsConfig {
 			err = client.api.NetworkDisconnect(bg, k, createdContainer.ID, true)
 			if err != nil {
-				return "", err
+				return rollback(createdContainer.ID, err)
 			}
 		}
 
 		for k, v := range networkConfig.EndpointsConfig {
 			err = client.api.NetworkConnect(bg, k, createdContainer.ID, v)
 			if err != nil {
-				return "", err
+				return rollback(createdContainer.ID, err)
 			}
 		}
 
@@ -295,10 +317,25 @@ func (client dockerClient) StartContainer(c t.Container) (t.ContainerID, error) 
 
 	createdContainerID := t.ContainerID(createdContainer.ID)
 	if !c.IsRunning() && !client.ReviveStopped {
+		if renamedOriginal {
+			if err := client.RemoveContainer(c); err != nil {
+				log.WithError(err).Warnf("Failed to remove replaced container %s (%s)", name, c.ID().ShortID())
+			}
+		}
 		return createdContainerID, nil
 	}
 
-	return createdContainerID, client.doStartContainer(bg, c, createdContainer)
+	if err := client.doStartContainer(bg, c, createdContainer); err != nil {
+		return rollback(createdContainer.ID, err)
+	}
+
+	if renamedOriginal {
+		if err := client.RemoveContainer(c); err != nil {
+			log.WithError(err).Warnf("Failed to remove replaced container %s (%s)", name, c.ID().ShortID())
+		}
+	}
+
+	return createdContainerID, nil
 
 }
 
@@ -317,6 +354,22 @@ func (client dockerClient) RenameContainer(c t.Container, newName string) error 
 	bg := context.Background()
 	log.Debugf("Renaming container %s (%s) to %s", c.Name(), c.ID().ShortID(), newName)
 	return client.api.ContainerRename(bg, string(c.ID()), newName)
+}
+
+func (client dockerClient) removeContainerByID(id t.ContainerID) error {
+	bg := context.Background()
+	shortID := id.ShortID()
+
+	log.Debugf("Removing container %s", shortID)
+	if err := client.api.ContainerRemove(bg, string(id), container.RemoveOptions{Force: true, RemoveVolumes: client.RemoveVolumes}); err != nil {
+		if sdkClient.IsErrNotFound(err) {
+			log.Debugf("Container %s not found, skipping removal.", shortID)
+			return nil
+		}
+		return err
+	}
+
+	return nil
 }
 
 func (client dockerClient) IsContainerStale(container t.Container, params t.UpdateParams) (stale bool, latestImage t.ImageID, err error) {
@@ -548,7 +601,7 @@ func (client dockerClient) waitForStopOrTimeout(c t.Container, waitTime time.Dur
 	for {
 		select {
 		case <-timeout:
-			return nil
+			return fmt.Errorf("container %s (%s) did not stop within %s", c.Name(), c.ID().ShortID(), waitTime)
 		default:
 			if ci, err := client.api.ContainerInspect(bg, string(c.ID())); err != nil {
 				return err

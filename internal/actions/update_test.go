@@ -121,6 +121,26 @@ var _ = Describe("the update action", func() {
 				Expect(report.Fresh()).To(HaveLen(1))
 			})
 		})
+		When("some containers are fresh", func() {
+			It("should only stop and restart the stale containers", func() {
+				testData := &TestData{
+					Staleness: map[string]bool{
+						"stale-container": true,
+						"fresh-container": false,
+					},
+					Containers: []types.Container{
+						CreateMockContainer("stale-container", "stale-container", "stale-image:latest", time.Now()),
+						CreateMockContainer("fresh-container", "fresh-container", "fresh-image:latest", time.Now()),
+					},
+				}
+				client := CreateMockClient(testData, false, false)
+
+				_, err := actions.Update(client, types.UpdateParams{})
+				Expect(err).NotTo(HaveOccurred())
+				Expect(client.TestData.StoppedContainers).To(Equal([]string{"stale-container"}))
+				Expect(client.TestData.StartedContainers).To(Equal([]string{"stale-container"}))
+			})
+		})
 	})
 
 	When("watchtower has been instructed to monitor only", func() {

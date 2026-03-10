@@ -77,7 +77,7 @@ var _ = Describe("the client", func() {
 	})
 	When("removing a running container", func() {
 		When("the container still exist after stopping", func() {
-			It("should attempt to remove the container", func() {
+			It("should only stop the container", func() {
 				container := MockContainer(WithContainerState(types.ContainerState{Running: true}))
 				containerStopped := MockContainer(WithContainerState(types.ContainerState{Running: false}))
 
@@ -85,8 +85,6 @@ var _ = Describe("the client", func() {
 				mockServer.AppendHandlers(
 					mocks.KillContainerHandler(cid, mocks.Found),
 					mocks.GetContainerHandler(cid, containerStopped.ContainerInfo()),
-					mocks.RemoveContainerHandler(cid, mocks.Found),
-					mocks.GetContainerHandler(cid, nil),
 				)
 
 				Expect(dockerClient{api: docker}.StopContainer(container, time.Minute)).To(Succeed())
@@ -100,11 +98,50 @@ var _ = Describe("the client", func() {
 				mockServer.AppendHandlers(
 					mocks.KillContainerHandler(cid, mocks.Found),
 					mocks.GetContainerHandler(cid, nil),
-					mocks.RemoveContainerHandler(cid, mocks.Missing),
 				)
 
 				Expect(dockerClient{api: docker}.StopContainer(container, time.Minute)).To(Succeed())
 			})
+		})
+	})
+	When("removing a container", func() {
+		It("should remove the container", func() {
+			container := MockContainer()
+			cid := container.ContainerInfo().ID
+
+			mockServer.AppendHandlers(mocks.RemoveContainerHandler(cid, mocks.Found))
+
+			Expect(dockerClient{api: docker}.RemoveContainer(container)).To(Succeed())
+		})
+	})
+	When("recreating a container", func() {
+		It("should restore the original container if replacement creation fails", func() {
+			client := dockerClient{api: docker}
+			container := MockContainer(WithContainerState(types.ContainerState{Running: true}))
+			container.containerInfo.NetworkSettings = &types.NetworkSettings{Networks: map[string]*network.EndpointSettings{}}
+
+			cid := container.ContainerInfo().ID
+			mockServer.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("POST", HaveSuffix("/containers/"+cid+"/rename")),
+					ghttp.RespondWith(http.StatusNoContent, nil),
+				),
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("POST", HaveSuffix("/containers/create")),
+					ghttp.RespondWith(http.StatusInternalServerError, nil),
+				),
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("POST", HaveSuffix("/containers/"+cid+"/rename")),
+					ghttp.RespondWith(http.StatusNoContent, nil),
+				),
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("POST", HaveSuffix("/containers/"+cid+"/start")),
+					ghttp.RespondWith(http.StatusNoContent, nil),
+				),
+			)
+
+			_, err := client.StartContainer(container)
+			Expect(err).To(HaveOccurred())
 		})
 	})
 	When("removing a image", func() {

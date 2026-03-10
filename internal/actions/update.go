@@ -3,7 +3,6 @@ package actions
 import (
 	"errors"
 
-	"github.com/containrrr/watchtower/internal/util"
 	"github.com/containrrr/watchtower/pkg/container"
 	"github.com/containrrr/watchtower/pkg/lifecycle"
 	"github.com/containrrr/watchtower/pkg/session"
@@ -73,7 +72,7 @@ func Update(client container.Client, params types.UpdateParams) (types.Report, e
 
 	var containersToUpdate []types.Container
 	for _, c := range containers {
-		if !c.IsMonitorOnly(params) {
+		if c.ToRestart() && !c.IsMonitorOnly(params) {
 			containersToUpdate = append(containersToUpdate, c)
 			progress.MarkForUpdate(c.ID())
 		}
@@ -209,17 +208,6 @@ func cleanupImages(client container.Client, imageIDs map[types.ImageID]bool) {
 }
 
 func restartStaleContainer(container types.Container, client container.Client, params types.UpdateParams) error {
-	// Since we can't shutdown a watchtower container immediately, we need to
-	// start the new one while the old one is still running. This prevents us
-	// from re-using the same container name so we first rename the current
-	// instance so that the new one can adopt the old name.
-	if container.IsWatchtower() {
-		if err := client.RenameContainer(container, util.RandName()); err != nil {
-			log.Error(err)
-			return nil
-		}
-	}
-
 	if !params.NoRestart {
 		if newContainerID, err := client.StartContainer(container); err != nil {
 			log.Error(err)

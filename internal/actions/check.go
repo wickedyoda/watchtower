@@ -71,6 +71,11 @@ func cleanupExcessWatchtowers(containers []types.Container, client container.Cli
 			stopErrors++
 			continue
 		}
+		if err := client.RemoveContainer(c); err != nil {
+			log.WithError(err).Error("Could not remove a previous watchtower instance.")
+			stopErrors++
+			continue
+		}
 
 		if cleanup {
 			if err := client.RemoveImageByID(c.ImageID()); err != nil {

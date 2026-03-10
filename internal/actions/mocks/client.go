@@ -21,6 +21,9 @@ type TestData struct {
 	NameOfContainerToKeep   string
 	Containers              []t.Container
 	Staleness               map[string]bool
+	StoppedContainers       []string
+	StartedContainers       []string
+	RemovedContainers       []string
 }
 
 // TriedToRemoveImage is a test helper function to check whether RemoveImageByID has been called
@@ -47,11 +50,22 @@ func (client MockClient) StopContainer(c t.Container, _ time.Duration) error {
 	if c.Name() == client.TestData.NameOfContainerToKeep {
 		return errors.New("tried to stop the instance we want to keep")
 	}
+	client.TestData.StoppedContainers = append(client.TestData.StoppedContainers, c.Name())
+	return nil
+}
+
+// RemoveContainer is a mock method
+func (client MockClient) RemoveContainer(c t.Container) error {
+	if c.Name() == client.TestData.NameOfContainerToKeep {
+		return errors.New("tried to remove the instance we want to keep")
+	}
+	client.TestData.RemovedContainers = append(client.TestData.RemovedContainers, c.Name())
 	return nil
 }
 
 // StartContainer is a mock method
-func (client MockClient) StartContainer(_ t.Container) (t.ContainerID, error) {
+func (client MockClient) StartContainer(c t.Container) (t.ContainerID, error) {
+	client.TestData.StartedContainers = append(client.TestData.StartedContainers, c.Name())
 	return "", nil
 }
 

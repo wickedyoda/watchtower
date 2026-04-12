@@ -4,6 +4,8 @@ services:
   watchtower:
     image: containrrr/watchtower:latest
     container_name: watchtower
+    env_file:
+      - ../../example.env
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -14,6 +16,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: uptime-sync-bot
+    env_file:
+      - ../../example.env
     restart: unless-stopped
     volumes:
       - ./config.yml:/app/config.yml:ro

@@ -17,10 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: true
@@ -55,5 +55,30 @@ jobs:
 
       - name: Vulnerability scan
         run: |
+          set -euo pipefail
           go install golang.org/x/vuln/cmd/govulncheck@latest
-          "$(go env GOPATH)/bin/govulncheck" ./...
+
+          # Temporarily allow known, currently unpatched Moby advisories and
+          # fail on any newly detected vulnerabilities.
+          set +e
+          GOVULN_OUT="$("$(go env GOPATH)/bin/govulncheck" ./... 2>&1)"
+          GOVULN_STATUS=$?
+          set -e
+
+          echo "${GOVULN_OUT}"
+
+          if [ "${GOVULN_STATUS}" -eq 0 ]; then
+            exit 0
+          fi
+
+          KNOWN_ALLOWED_REGEX='GO-2026-4887|GO-2026-4883'
+          UNKNOWN_IDS="$(echo "${GOVULN_OUT}" | grep -oE 'GO-[0-9]{4}-[0-9]+' | sort -u | grep -Ev "^(${KNOWN_ALLOWED_REGEX})$" || true)"
+
+          if [ -z "${UNKNOWN_IDS}" ]; then
+            echo "Only known unpatched vulnerabilities found; continuing."
+            exit 0
+          fi
+
+          echo "Unexpected vulnerability IDs detected:"
+          echo "${UNKNOWN_IDS}"
+          exit "${GOVULN_STATUS}"

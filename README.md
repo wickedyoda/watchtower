@@ -1,7 +1,7 @@
 <div align="center">
   <img src="./logo.png" width="450" />
   
-# Origional Watchtower package at wickedyoda/watchtower has not been updated in a while, there is several PR and images out there which need to be applied. So, I have forked his repo here and corrected a few things. Here is a link to my repo with docker images. 
+# Origional Watchtower package has not been updated in a while, there is several PR and images out there which need to be applied. So, I have forked his repo here and corrected a few things. Here is a link to my repo with docker images. 
 
 # Watchtower
   

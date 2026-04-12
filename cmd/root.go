@@ -367,16 +367,16 @@ func runUpgradesOnSchedule(c *cobra.Command, filter t.Filter, filtering string, 
 func runUpdatesWithNotifications(filter t.Filter) *metrics.Metric {
 	notifier.StartNotification()
 	updateParams := t.UpdateParams{
-		Filter:          filter,
-		Cleanup:         cleanup,
-		NoRestart:       noRestart,
-		Timeout:         timeout,
-		MonitorOnly:     monitorOnly,
-		LifecycleHooks:  lifecycleHooks,
-		RollingRestart:  rollingRestart,
-		LabelPrecedence: labelPrecedence,
-		NoPull:          noPull,
-		UptimeKumaURL:   uptimeKumaURL,
+		Filter:           filter,
+		Cleanup:          cleanup,
+		NoRestart:        noRestart,
+		Timeout:          timeout,
+		MonitorOnly:      monitorOnly,
+		LifecycleHooks:   lifecycleHooks,
+		RollingRestart:   rollingRestart,
+		LabelPrecedence:  labelPrecedence,
+		NoPull:           noPull,
+		UptimeKumaURL:    uptimeKumaURL,
 		UptimeKumaAPIKey: uptimeKumaAPIKey,
 	}
 	result, err := actions.Update(client, updateParams)

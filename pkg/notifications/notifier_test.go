@@ -296,6 +296,48 @@ var _ = Describe("notifications", func() {
 		})
 	})
 
+	Describe("the discord notifier", func() {
+		When("converting a discord service config into a shoutrrr url", func() {
+			It("should return the expected URL", func() {
+				token := "abcdef"
+				webhookID := "123456789"
+				hookURL := fmt.Sprintf("https://discord.com/api/webhooks/%s/%s", webhookID, token)
+				expectedOutput := fmt.Sprintf("discord://%s@%s?color=0x%x&colordebug=0x0&colorerror=0x0&colorinfo=0x0&colorwarn=0x0", token, webhookID, notifications.ColorInt)
+
+				args := []string{
+					"--notifications",
+					"discord",
+					"--notification-discord-hook-url",
+					hookURL,
+				}
+
+				testURL(args, expectedOutput, time.Duration(0))
+			})
+
+			It("should include username and avatar when configured", func() {
+				token := "abcdef"
+				webhookID := "123456789"
+				username := "containrrrbot"
+				avatar := "https://containrrr.dev/watchtower-sq180.png"
+				hookURL := fmt.Sprintf("https://discord.com/api/webhooks/%s/%s", webhookID, token)
+				expectedOutput := fmt.Sprintf("discord://%s@%s?avatar=%s&color=0x%x&colordebug=0x0&colorerror=0x0&colorinfo=0x0&colorwarn=0x0&username=%s", token, webhookID, url.QueryEscape(avatar), notifications.ColorInt, username)
+
+				args := []string{
+					"--notifications",
+					"discord",
+					"--notification-discord-hook-url",
+					hookURL,
+					"--notification-discord-identifier",
+					username,
+					"--notification-discord-avatar-url",
+					avatar,
+				}
+
+				testURL(args, expectedOutput, time.Duration(0))
+			})
+		})
+	})
+
 	Describe("the email notifier", func() {
 		When("converting an email service config into a shoutrrr url", func() {
 			It("should set the from address in the URL", func() {

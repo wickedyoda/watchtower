@@ -29,6 +29,7 @@ system, [logrus](http://github.com/sirupsen/logrus).
 To send notifications via shoutrrr, the following command-line options, or their corresponding environment variables, can be set:
 
 -   `--notification-url` (env. `WATCHTOWER_NOTIFICATION_URL`): The shoutrrr service URL to be used.  This option can also reference a file, in which case the contents of the file are used.
+-   `--notification-webhook-url` (env. `WATCHTOWER_NOTIFICATION_WEBHOOK_URL`): Webhook URL alias for `notification-url`. This can be used for Discord and similar apps by supplying shoutrrr-compatible webhook URLs. This option can also reference a file.
 
 
 Go to [containrrr.dev/shoutrrr/v0.8/services/overview](https://containrrr.dev/shoutrrr/v0.8/services/overview) to
@@ -187,6 +188,7 @@ The types of notifications to send are set by passing a comma-separated list of 
 -   `slack` to send notifications through a Slack webhook
 -   `msteams` to send notifications via MSTeams webhook
 -   `gotify` to send notifications via Gotify
+-   `discord` to send notifications via a Discord webhook
 
 ### `notify-upgrade`
 If watchtower is started with `notify-upgrade` as it's first argument, it will generate a .env file with your current legacy notification options converted to shoutrrr URLs.
@@ -257,6 +259,14 @@ To receive notifications by email, the following command-line options, or their 
 -   `--notification-email-server-password` (env. `WATCHTOWER_NOTIFICATION_EMAIL_SERVER_PASSWORD`): The password to authenticate with the SMTP server with. Can also reference a file, in which case the contents of the file are used.
 -   `--notification-email-delay` (env. `WATCHTOWER_NOTIFICATION_EMAIL_DELAY`): Delay before sending notifications expressed in seconds.
 -   `--notification-email-subjecttag` (env. `WATCHTOWER_NOTIFICATION_EMAIL_SUBJECTTAG`): Prefix to include in the subject tag. Useful when running multiple watchtowers. **NOTE:** This will affect all notification types.
+
+### Discord
+
+To receive notifications via a Discord webhook without configuring Shoutrrr URLs directly, set:
+
+-   `--notification-discord-hook-url` (env. `WATCHTOWER_NOTIFICATION_DISCORD_HOOK_URL`): The Discord webhook URL.
+-   `--notification-discord-identifier` (env. `WATCHTOWER_NOTIFICATION_DISCORD_IDENTIFIER`): Optional username override for the Discord bot.
+-   `--notification-discord-avatar-url` (env. `WATCHTOWER_NOTIFICATION_DISCORD_AVATAR_URL`): Optional avatar URL for Discord notifications.
 
 Example:
 

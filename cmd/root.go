@@ -43,6 +43,8 @@ var (
 	rollingRestart    bool
 	scope             string
 	labelPrecedence   bool
+	uptimeKumaURL     string
+	uptimeKumaAPIKey  string
 )
 
 var rootCmd = NewRootCommand()
@@ -100,6 +102,12 @@ func PreRun(cmd *cobra.Command, _ []string) {
 	rollingRestart, _ = f.GetBool("rolling-restart")
 	scope, _ = f.GetString("scope")
 	labelPrecedence, _ = f.GetBool("label-take-precedence")
+	uptimeKumaURL, _ = f.GetString("uptime-kuma-url")
+	uptimeKumaAPIKey, _ = f.GetString("uptime-kuma-api-key")
+
+	if (uptimeKumaURL == "") != (uptimeKumaAPIKey == "") {
+		log.Warn("Both --uptime-kuma-url and --uptime-kuma-api-key are required to enable Uptime Kuma sync")
+	}
 
 	if scope != "" {
 		log.Debugf(`Using scope %q`, scope)
@@ -368,6 +376,8 @@ func runUpdatesWithNotifications(filter t.Filter) *metrics.Metric {
 		RollingRestart:  rollingRestart,
 		LabelPrecedence: labelPrecedence,
 		NoPull:          noPull,
+		UptimeKumaURL:   uptimeKumaURL,
+		UptimeKumaAPIKey: uptimeKumaAPIKey,
 	}
 	result, err := actions.Update(client, updateParams)
 	if err != nil {

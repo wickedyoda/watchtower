@@ -39,6 +39,9 @@ The following arguments are currently supported (including their corresponding `
  - `notification-msteams-hook`
  - `notification-gotify-token`
  - `http-api-token`
+ - `uptime-kuma-api-key`
+ - `notification-webhook-url`
+ - `notification-discord-hook-url`
 
 ### Example docker-compose usage
 ```yaml
@@ -163,6 +166,26 @@ Docker daemon socket to connect to. Can be pointed at a remote Docker host by sp
 Environment Variable: DOCKER_HOST
                 Type: String
              Default: "unix:///var/run/docker.sock"
+```
+
+## Uptime Kuma URL
+Base URL for Uptime Kuma, used by container ID synchronization integrations.
+
+```text
+            Argument: --uptime-kuma-url
+Environment Variable: WATCHTOWER_UPTIME_KUMA_URL
+                Type: String
+             Default: ""
+```
+
+## Uptime Kuma API key
+API key used by Uptime Kuma synchronization integrations.
+
+```text
+            Argument: --uptime-kuma-api-key
+Environment Variable: WATCHTOWER_UPTIME_KUMA_API_KEY
+                Type: String
+             Default: ""
 ```
 
 ## Docker API version

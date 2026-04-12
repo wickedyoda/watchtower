@@ -189,6 +189,16 @@ func RegisterSystemFlags(rootCmd *cobra.Command) {
 		envString("WATCHTOWER_SCOPE"),
 		"Defines a monitoring scope for the Watchtower instance.")
 
+	flags.String(
+		"uptime-kuma-url",
+		envString("WATCHTOWER_UPTIME_KUMA_URL"),
+		"Uptime Kuma base URL used for container ID sync integrations")
+
+	flags.String(
+		"uptime-kuma-api-key",
+		envString("WATCHTOWER_UPTIME_KUMA_API_KEY"),
+		"Uptime Kuma API key used for container ID sync integrations")
+
 	flags.StringP(
 		"porcelain",
 		"P",
@@ -221,7 +231,7 @@ func RegisterNotificationFlags(rootCmd *cobra.Command) {
 		"notifications",
 		"n",
 		envStringSlice("WATCHTOWER_NOTIFICATIONS"),
-		" Notification types to send (valid: email, slack, msteams, gotify, shoutrrr)")
+		" Notification types to send (valid: email, slack, msteams, gotify, discord, shoutrrr)")
 
 	flags.String(
 		"notifications-level",
@@ -349,6 +359,24 @@ Should only be used for testing.`)
 		envString("WATCHTOWER_NOTIFICATION_GOTIFY_TOKEN"),
 		"The Gotify Application required to query the Gotify API")
 
+	flags.StringP(
+		"notification-discord-hook-url",
+		"",
+		envString("WATCHTOWER_NOTIFICATION_DISCORD_HOOK_URL"),
+		"The Discord WebHook URL to send notifications to")
+
+	flags.StringP(
+		"notification-discord-identifier",
+		"",
+		envString("WATCHTOWER_NOTIFICATION_DISCORD_IDENTIFIER"),
+		"A string which will be used as the Discord bot username")
+
+	flags.StringP(
+		"notification-discord-avatar-url",
+		"",
+		envString("WATCHTOWER_NOTIFICATION_DISCORD_AVATAR_URL"),
+		"An avatar image URL string to use for Discord notifications")
+
 	flags.BoolP(
 		"notification-gotify-tls-skip-verify",
 		"",
@@ -365,6 +393,11 @@ Should only be used for testing.`)
 		"notification-url",
 		envStringSlice("WATCHTOWER_NOTIFICATION_URL"),
 		"The shoutrrr URL to send notifications to")
+
+	flags.StringArray(
+		"notification-webhook-url",
+		envStringSlice("WATCHTOWER_NOTIFICATION_WEBHOOK_URL"),
+		"Webhook URLs to send notifications to (alias for notification-url, supports Discord and similar services via shoutrrr URLs)")
 
 	flags.Bool("notification-report",
 		envBool("WATCHTOWER_NOTIFICATION_REPORT"),
@@ -536,8 +569,11 @@ func GetSecretsFromFiles(rootCmd *cobra.Command) {
 		"notification-slack-hook-url",
 		"notification-msteams-hook",
 		"notification-gotify-token",
+		"notification-discord-hook-url",
 		"notification-url",
+		"notification-webhook-url",
 		"http-api-token",
+		"uptime-kuma-api-key",
 	}
 	for _, secret := range secrets {
 		if err := getSecretFromFile(flags, secret); err != nil {
@@ -618,6 +654,14 @@ func ProcessFlagAliases(flags *pflag.FlagSet) {
 		setFlagIfDefault(flags, `notification-report`, `true`)
 		tpl := fmt.Sprintf(`porcelain.%s.summary-no-log`, porcelain)
 		setFlagIfDefault(flags, `notification-template`, tpl)
+	}
+
+	if webhookURLs, err := flags.GetStringArray(`notification-webhook-url`); err != nil {
+		log.Errorf(`Failed to get flag: %v`, err)
+	} else if len(webhookURLs) > 0 {
+		if err = appendFlagValue(flags, `notification-url`, webhookURLs...); err != nil {
+			log.Errorf(`Failed to set flag: %v`, err)
+		}
 	}
 
 	scheduleChanged := flags.Changed(`schedule`)

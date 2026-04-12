@@ -15,4 +15,6 @@ type UpdateParams struct {
 	LifecycleHooks  bool
 	RollingRestart  bool
 	LabelPrecedence bool
+	UptimeKumaURL   string
+	UptimeKumaAPIKey string
 }

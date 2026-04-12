@@ -1,6 +1,8 @@
 services:
   watchtower:
     container_name: watchtower
+    env_file:
+      - ./example.env
     build:
       context: ./
       dockerfile: dockerfiles/Dockerfile.dev-self-contained
@@ -9,8 +11,8 @@ services:
     ports:
       - 8080:8080
     environment:
-      WATCHTOWER_CRON_SCHEDULE: "0 0 4 * * *"
-    command: --http-api-metrics --http-api-token demotoken --debug prometheus grafana parent child
+      WATCHTOWER_CRON_SCHEDULE: "${WATCHTOWER_CRON_SCHEDULE}"
+    command: --http-api-metrics --http-api-token ${WATCHTOWER_HTTP_API_TOKEN} --debug prometheus grafana parent child
   prometheus:
     container_name: prometheus
     image: prom/prometheus
@@ -22,10 +24,12 @@ services:
   grafana:
     container_name: grafana
     image: grafana/grafana
+    env_file:
+      - ./example.env
     ports:
       - 3000:3000
     environment:
-      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource
+      GF_INSTALL_PLUGINS: ${GF_INSTALL_PLUGINS}
     volumes:
       - grafana:/var/lib/grafana
       - ./grafana:/etc/grafana/provisioning

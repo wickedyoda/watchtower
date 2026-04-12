@@ -1,6 +1,8 @@
 services:
   producer:
     image: qmcgaw/gluetun:v3.35.0
+    env_file:
+      - ../../example.env
     cap_add:
       - NET_ADMIN
     environment:
@@ -12,6 +14,8 @@ services:
     depends_on:
       - producer
     image: nginx:1.25.1
+    env_file:
+      - ../../example.env
     network_mode: "service:producer"
     labels:
       - "com.centurylinklabs.watchtower.depends-on=/wt-contnet-producer-1"

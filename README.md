@@ -25,3 +25,23 @@ Watchtower is intended to be used in homelabs, media centers, local dev environm
 ## Documentation
 The full documentation is available at https://github.com/wickedyoda/watchtower.
 
+## Environment File Setup
+
+An `example.env` file is included at the repository root with all supported environment variables.
+
+1. Copy `example.env` to `.env`
+2. Fill in the values you want to use
+3. Start watchtower with the env file
+
+Example using Docker:
+
+```bash
+docker run --detach \
+  --name watchtower \
+  --volume /var/run/docker.sock:/var/run/docker.sock \
+  --env-file .env \
+  ghcr.io/wickedyoda/watchtower:latest
+```
+
+For full flag and argument behavior, see `docs/arguments.md`.
+

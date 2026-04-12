@@ -91,6 +91,37 @@ func TestGetSliceSecretsFromFiles(t *testing.T) {
 		`--notification-url`, file.Name())
 }
 
+func TestGetWebhookSliceSecretsFromFiles(t *testing.T) {
+	values := []string{"discord://token@channel", "", "slack://watchtower@token-a/token-b/token-c"}
+
+	file, err := os.CreateTemp(t.TempDir(), "watchtower-")
+	require.NoError(t, err)
+
+	for _, value := range values {
+		_, err = file.WriteString("\n" + value)
+		require.NoError(t, err)
+	}
+	require.NoError(t, file.Close())
+
+	testGetSecretsFromFiles(t, "notification-webhook-url", `[entry1,discord://token@channel,slack://watchtower@token-a/token-b/token-c]`,
+		`--notification-webhook-url`, "entry1",
+		`--notification-webhook-url`, file.Name())
+}
+
+func TestGetDiscordHookSecretFromFile(t *testing.T) {
+	value := "https://discord.com/api/webhooks/1234567890/abcdef"
+
+	file, err := os.CreateTemp(t.TempDir(), "watchtower-")
+	require.NoError(t, err)
+
+	_, err = file.Write([]byte(value))
+	require.NoError(t, err)
+	require.NoError(t, file.Close())
+
+	testGetSecretsFromFiles(t, "notification-discord-hook-url", value,
+		`--notification-discord-hook-url`, file.Name())
+}
+
 func testGetSecretsFromFiles(t *testing.T, flagName string, expected string, args ...string) {
 	cmd := new(cobra.Command)
 	SetDefaults()
@@ -158,6 +189,26 @@ func TestProcessFlagAliases(t *testing.T) {
 
 	logLevel, _ := flags.GetString(`log-level`)
 	assert.Equal(t, `trace`, logLevel)
+}
+
+func TestProcessFlagAliasesWebhookURLs(t *testing.T) {
+	cmd := new(cobra.Command)
+	SetDefaults()
+	RegisterDockerFlags(cmd)
+	RegisterSystemFlags(cmd)
+	RegisterNotificationFlags(cmd)
+
+	require.NoError(t, cmd.ParseFlags([]string{
+		`--notification-webhook-url`, `discord://token@channel`,
+		`--notification-webhook-url`, `slack://watchtower@token-a/token-b/token-c`,
+	}))
+
+	flags := cmd.Flags()
+	ProcessFlagAliases(flags)
+
+	urls, _ := flags.GetStringArray(`notification-url`)
+	assert.Contains(t, urls, `discord://token@channel`)
+	assert.Contains(t, urls, `slack://watchtower@token-a/token-b/token-c`)
 }
 
 func TestProcessFlagAliasesLogLevelFromEnvironment(t *testing.T) {

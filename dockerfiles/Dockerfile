@@ -3,7 +3,7 @@ ARG TARGETOS
 ARG TARGETARCH
 ARG TARGETVARIANT
 
-FROM --platform=$BUILDPLATFORM golang:1.26.1-alpine AS build
+FROM --platform=$BUILDPLATFORM golang:1.26.5-alpine AS build
 WORKDIR /src
 
 RUN apk add --no-cache git
@@ -19,7 +19,7 @@ RUN CGO_ENABLED=0 \
     GOARM="$( [ "$TARGETARCH" = "arm" ] && echo "${TARGETVARIANT#v}" )" \
     go build -o /out/watchtower .
 
-FROM --platform=$BUILDPLATFORM alpine:3.19.0 as alpine
+FROM --platform=$BUILDPLATFORM alpine:3.21.3 as alpine
 
 RUN apk add --no-cache \
     ca-certificates \

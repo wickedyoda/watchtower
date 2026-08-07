@@ -70,7 +70,7 @@ docker run -d \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -e WATCHTOWER_NOTIFICATION_URL="discord://token@channel slack://watchtower@token-a/token-b/token-c" \
   -e WATCHTOWER_NOTIFICATION_TEMPLATE="{{range .}}{{.Time.Format \"2006-01-02 15:04:05\"}} ({{.Level}}): {{.Message}}{{println}}{{end}}" \
-  containrrr/watchtower
+  ghcr.io/wickedyoda/watchtower:latest
 ```
 
 ## Report templates
@@ -139,7 +139,7 @@ Example using a custom report template that always sends a session report after 
         {{range .Entries -}}{{.Message}}{{\"\n\"}}{{- end -}}
       {{- end -}}
       " \
-      containrrr/watchtower
+      ghcr.io/wickedyoda/watchtower:latest
     ```
 
 === "docker-compose"
@@ -148,7 +148,7 @@ Example using a custom report template that always sends a session report after 
     version: "3"
     services:
       watchtower:
-        image: containrrr/watchtower
+        image: ghcr.io/wickedyoda/watchtower:latest
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
         env:
@@ -201,7 +201,7 @@ If watchtower is started with `notify-upgrade` as it's first argument, it will g
     -v /var/run/docker.sock:/var/run/docker.sock \
     -e WATCHTOWER_NOTIFICATIONS=slack \
     -e WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL="https://hooks.slack.com/services/xxx/yyyyyyyyyyyyyyy" \
-    containrrr/watchtower \
+    ghcr.io/wickedyoda/watchtower:latest \
     notify-upgrade
     ```
 
@@ -211,7 +211,7 @@ If watchtower is started with `notify-upgrade` as it's first argument, it will g
     version: "3"
     services:
       watchtower:
-        image: containrrr/watchtower
+        image: ghcr.io/wickedyoda/watchtower:latest
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
         env:
@@ -230,7 +230,7 @@ You can then copy this file from the container (a message with the full command 
     --name watchtower \
     -v /var/run/docker.sock:/var/run/docker.sock \
     --env-file watchtower-notifications.env \
-    containrrr/watchtower
+    ghcr.io/wickedyoda/watchtower:latest
     ```
 
 === "docker-compose.yml"
@@ -239,7 +239,7 @@ You can then copy this file from the container (a message with the full command 
     version: "3"
     services:
       watchtower:
-        image: containrrr/watchtower
+        image: ghcr.io/wickedyoda/watchtower:latest
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
         env_file:
@@ -282,7 +282,7 @@ docker run -d \
   -e WATCHTOWER_NOTIFICATION_EMAIL_SERVER_USER=fromaddress@gmail.com \
   -e WATCHTOWER_NOTIFICATION_EMAIL_SERVER_PASSWORD=app_password \
   -e WATCHTOWER_NOTIFICATION_EMAIL_DELAY=2 \
-  containrrr/watchtower
+  ghcr.io/wickedyoda/watchtower:latest
 ```
 
 The previous example assumes, that you already have an SMTP server up and running you can connect to. If you don't or you want to bring up watchtower with your own simple SMTP relay the following `docker-compose.yml` might be a good start for you.
@@ -295,7 +295,7 @@ Example including an SMTP relay:
 version: '3.8'
 services:
   watchtower:
-    image: containrrr/watchtower:latest
+    image: ghcr.io/wickedyoda/watchtower:latest:latest
     container_name: watchtower
     environment:
       WATCHTOWER_MONITOR_ONLY: 'true'
@@ -357,7 +357,7 @@ docker run -d \
   -e WATCHTOWER_NOTIFICATION_SLACK_HOOK_URL="https://hooks.slack.com/services/xxx/yyyyyyyyyyyyyyy" \
   -e WATCHTOWER_NOTIFICATION_SLACK_IDENTIFIER=watchtower-server-1 \
   -e WATCHTOWER_NOTIFICATION_SLACK_CHANNEL=#my-custom-channel \
-  containrrr/watchtower
+  ghcr.io/wickedyoda/watchtower:latest
 ```
 
 ### Microsoft Teams
@@ -377,7 +377,7 @@ docker run -d \
   -e WATCHTOWER_NOTIFICATIONS=msteams \
   -e WATCHTOWER_NOTIFICATION_MSTEAMS_HOOK_URL="https://outlook.office.com/webhook/xxxxxxxx@xxxxxxx/IncomingWebhook/yyyyyyyy/zzzzzzzzzz" \
   -e WATCHTOWER_NOTIFICATION_MSTEAMS_USE_LOG_DATA=true \
-  containrrr/watchtower
+  ghcr.io/wickedyoda/watchtower:latest
 ```
 
 ### Gotify
@@ -391,7 +391,7 @@ docker run -d \
   -e WATCHTOWER_NOTIFICATIONS=gotify \
   -e WATCHTOWER_NOTIFICATION_GOTIFY_URL="https://my.gotify.tld/" \
   -e WATCHTOWER_NOTIFICATION_GOTIFY_TOKEN="SuperSecretToken" \
-  containrrr/watchtower
+  ghcr.io/wickedyoda/watchtower:latest
 ```
 
 `-e WATCHTOWER_NOTIFICATION_GOTIFY_TOKEN` or `--notification-gotify-token` can also reference a file, in which case the contents of the file are used.

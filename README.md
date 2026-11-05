@@ -1,4 +1,10 @@
 <div align="center">
+
+  ### ⚠️ This project is no longer maintained
+  See https://github.com/containrrr/watchtower/discussions/2135 for details.
+
+  ---
+  
   <img src="./logo.png" width="450" />
   
 # Origional Watchtower package has not been updated in a while, there is several PR and images out there which need to be applied. So, I have forked his repo here and corrected a few things. Here is a link to my repo with docker images. 
